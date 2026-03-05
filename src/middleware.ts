@@ -1,4 +1,4 @@
-import { Elysia } from "elysia";
+import { Elysia, t } from "elysia";
 import { openapi } from "@elysiajs/openapi";
 
 const app = new Elysia()
@@ -32,9 +32,9 @@ app.get("/profile", () => {
         name: "Nama kamu"
     };
 }, {
-afterHandle({ response }) {
-    return {
-        success: true,
+    afterHandle({ response }) {
+        return {
+            success: true,
         data: response
     };
 }
@@ -51,6 +51,38 @@ afterHandle({ response }) {
     };
     }
 });
+
+app.post(
+    "/login",
+    ({ body }) =>  body,
+    {
+        body: t.Object({
+            email: t.String({ format: "email" }),
+            password: t.String({ minLength: 8 })
+    })
+})
+
+app.onError(({ code, error, set }) => {
+    if (code === "VALIDATION") {
+        set.status = 400
+        return {
+            success: false,
+            error: "Validation Error"
+        }
+    }
+    
+    if (code === "NOT_FOUND") {
+        set.status = 404
+        return {
+            error: "Route not found"
+        }
+    }
+    
+    set.status = 500
+    return {
+        error: "Internal Server Error"
+    }
+})
 
 app.listen(3000);
 console.log("Server running at http://localhost:3000");
